@@ -20,16 +20,21 @@ Route::resource('categories', CategoryController::class);
 Route::resource('products', ProductController::class);
 
 
+Route::prefix('orders')->group(function () {
+    Route::get('/all', [OrderController::class, 'index']);
+    Route::get('/report', [OrderController::class, 'report']);
+});
+
 //harus login dulu
 Route::middleware('auth:api')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('profile', [AuthController::class, 'profile']);
-    // Route::resource('orders', OrderController::class);
     Route::prefix('orders')->group(function () {
+        Route::get('myreport', [OrderController::class, 'userReport']);
         Route::get('/', [OrderController::class, 'index']);
         Route::post('/', [OrderController::class, 'store']);
+        Route::get('/{id}', [OrderController::class, 'show']);
         Route::put('/{id}', [OrderController::class, 'update']);
         Route::delete('/{id}', [OrderController::class, 'destroy']);
-        Route::get('report', [OrderController::class, 'report']);
     });
 });
