@@ -15,7 +15,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
+            'address' => 'nullable|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -28,32 +28,40 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Register Successfully'
-        ], 200);
+            'status' => 'Success',
+            'message' => 'Register Successfully',
+            'data' => $user,
+        ], 201);
     }
 
     // Login user and return the token
     public function login(Request $request)
     {
         $request->validate([
-            "email" => "required|email",
-            "password" => "required|string|min:6"
+            'email' => 'required|email',
+            'password' => 'required|string|min:6'
         ]);
 
-        $credential = request(["email", "password"]);
+        $credential = request(['email', 'password']);
         if (!$token = auth()->attempt($credential)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json(['error' => 'User not Registered'], 401);
         }
         return response()->json([
+            'status' => 'Success',
+            'message' => 'Login Successful',
+            'data' => auth()->user(),
             'access_token' => $token,
-            'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
-        ]);
+        ], 200);
     }
 
     public function profile()
     {
-        return response()->json(auth()->user(), 200);
+        return response()->json([
+            'status' => 'Success',
+            'message' => 'User profile retrieved successfully',
+            'data' => auth()->user()
+        ], 200);
     }
 
     public function logout()
@@ -62,11 +70,9 @@ class AuthController extends Controller
         auth()->logout();
         if ($removeToken) {
             return response()->json([
-                'success' => true,
-                'massage' => 'Logout Berhasil'
-            ]);
+                'status' => 'success',
+                'massage' => 'User logged out successfully'
+            ], 200);
         }
     }
-
-
 }

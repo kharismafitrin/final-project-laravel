@@ -14,7 +14,11 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::all();
-        return response()->json($products);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Products retrieved successfully',
+            'data' => $products
+        ]);
     }
 
     /**
@@ -35,13 +39,21 @@ class ProductController extends Controller
             'category_id' => 'required|integer',
             'price' => 'required|numeric',
         ]);
+
         if (empty(Category::find($request->category_id))) {
-            return response()->json(["message" => "Category not found!"], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Category not found!'
+            ], 404);
         }
 
         $product = Product::create($request->all());
 
-        return response()->json($product, 200);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product created successfully',
+            'data' => $product
+        ], 201);
     }
 
     /**
@@ -50,7 +62,18 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = Product::find($id);
-        return response()->json($product);
+        if (empty($product)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product retrieved successfully',
+            'data' => $product
+        ]);
     }
 
     /**
@@ -69,17 +92,30 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|integer',
-            'price' => 'required|decimal:2',
+            'price' => 'required|numeric',
         ]);
+
         if (empty(Category::find($request->category_id))) {
-            return response()->json(["message" => "Category not found!"], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Category not found!'
+            ], 404);
         }
+
         $product = Product::find($id);
         if (empty($product)) {
-            return response()->json(["message" => "Product not Found"], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found'
+            ], 404);
         }
+
         $product->update($request->all());
-        return response()->json($product);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product updated successfully',
+            'data' => $product
+        ]);
     }
 
     /**
@@ -88,10 +124,27 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::find($id);
+
         if (empty($product)) {
-            return response()->json(["message" => "Product not Found"], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found'
+            ], 404);
         }
+
+        if ($product->orders()->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete product because it is associated with existing orders'
+            ], 400);
+        }
+
         $product->delete();
-        return response()->json(null);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product deleted successfully',
+            "data" => $product
+        ], 200);
     }
 }

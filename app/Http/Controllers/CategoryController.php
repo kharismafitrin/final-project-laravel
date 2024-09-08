@@ -18,7 +18,11 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::all();
-        return response()->json($categories);
+        return response()->json([
+            'status' => 'Success',
+            'message' => 'Categories retrieved successfully',
+            'data' => $categories
+        ], 200);
     }
 
     /**
@@ -38,7 +42,11 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
         ]);
         $category = Category::create($request->all());
-        return response()->json($category);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Category created successfully',
+            'data' => $category
+        ], 201);
     }
 
     /**
@@ -48,9 +56,16 @@ class CategoryController extends Controller
     {
         $category = Category::find($id);
         if (empty($category)) {
-            return response()->json(["message" => "Category not Found"], 404);
+            return response()->json([
+                "status" => "error",
+                "message" => "Category not found"
+            ], 404);
         }
-        return response()->json($category);
+        return response()->json([
+            "status" => "success",
+            "message" => "Category retrieved successfully",
+            "data" => $category
+        ], 200);
     }
 
     /**
@@ -67,17 +82,24 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = Category::find($id);
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
+        if (empty($category)) {
+            return response()->json([
+                "status" => "error",
+                "message" => "Category not found"
+            ], 404);
         }
 
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
-        $category->update($request->only('name'));
+        $category->update($request->all());
 
-        return response()->json($category);
+        return response()->json([
+            "status" => "success",
+            "message" => "Category updated successfully",
+            "data" => $category
+        ], 200);
     }
 
     /**
@@ -87,9 +109,24 @@ class CategoryController extends Controller
     {
         $category = Category::find($id);
         if (empty($category)) {
-            return response()->json(["message" => "Category not found"], 404);
+            return response()->json([
+                "status" => "error",
+                "message" => "Category not found"
+            ], 404);
         }
+
+        if ($category->products()->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete category because it is associated with existing orders'
+            ], 400);
+        }
+
         $category->delete();
-        return response()->json($category);
+        return response()->json([
+            "status" => "success",
+            "message" => "Category deleted successfully",
+            "data" => $category
+        ], 200);
     }
 }
